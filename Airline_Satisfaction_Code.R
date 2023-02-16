@@ -15,22 +15,16 @@ package.check <- lapply(packages, FUN = function(x) {
 search()
 
 library(readr)
-readCSV<-function(location) #read file
-{
-  # read in data, replace blanks with NAs, trim white space
-  x <- read_csv(location, na = "NA", trim_ws = TRUE)
-  return(x)
-}
-
-
 library(kernlab)
 library(e1071)
 library(ggplot2)
 library(gridExtra)
 library(caret)
+library(readxl)
 
-#Create Raw Dataframe
-SatSurveyRaw <- readCSV("Desktop/IST687/Code/Satisfaction Survey(2).csv")
+location <- "AirlineSatisfactionSurvey.csv"
+
+SatSurveyRaw <- read_excel(location, na = "NA")
 
 
 #Create data frame for clean up
@@ -549,17 +543,15 @@ head(df.test)
 # CLEAN UP #################################################
 
 # Clear environment
-rm(list = ls()) 
+# rm(list = ls()) 
 
 # Clear packages
-p_unload(all)  # Remove all add-ons
+# p_unload(all)  # Remove all add-ons
 
 # Clear plots
-dev.off()  # But only if there IS a plot
+# dev.off()  # But only if there IS a plot
 
 # Clear console
-cat("\014")  # ctrl+L
+# cat("\014")  # ctrl+L
 
 # Clear mind :)
-
-
