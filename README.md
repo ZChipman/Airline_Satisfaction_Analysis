@@ -29,3 +29,7 @@ Airline_Satisfaction_Code.R They raw code used to create the analysis featured i
 Airline_Satisfaction_Survey.xslx: The Excel sheet containing the data used in this project.
 
 Attributes.docx: Explains the meaning of each column in the Excel file.
+
+## Technical Requirements:
+
+Any application running R (like R Studio) should be able to replicate this project. If there are any instances of deprecated code when using more recent versions of R, feel free to let me know.
