@@ -1,9 +1,9 @@
-#specify the packages of interest
+# Specify the packages of interest
 packages=c("maps","zipcode","mapproj","ggmap","ggplot2","readxl")
 
-#use this function to check if each package is on the local machine
-#if a package is installed, it will be loaded
-#if any are not, the missing package(s) will be installed and loaded
+# Use this function to check if each package is on the local machine
+# If a package is installed, it will be loaded
+# if any are not, the missing package(s) will be installed and loaded
 package.check <- lapply(packages, FUN = function(x) {
   if (!require(x, character.only = TRUE)) {
     install.packages(x, dependencies = TRUE)
@@ -11,7 +11,7 @@ package.check <- lapply(packages, FUN = function(x) {
   }
 })
 
-#verify they are loaded
+# Verify they are loaded
 search()
 
 library(readr)
@@ -22,29 +22,29 @@ library(gridExtra)
 library(caret)
 library(readxl)
 
-location <- "AirlineSatisfactionSurvey.csv"
+location <- "Airline_Satisfaction_Survey.xlsx"
 
 SatSurveyRaw <- read_excel(location, na = "NA")
 
 
-#Create data frame for clean up
+# Create data frame for clean up
 SatSurvey<-SatSurveyRaw
 
 
 # Remove cases with misrepresented satisfaction ratings
 
 
-#write a function for: 0 entry is maintained, <1 is set to 1 to categorized to yes/no ie 1/0
+# Write a function for: 0 entry is maintained, <1 is set to 1 to categorized to 
+# yes/no ie 1/0
 
-#No. of other Loyalty Cards:  add a column with (0=none) and (1=loyalty member)
-
+# No. of other Loyalty Cards:  add a column with (0=none) and (1=loyalty member)
 SatSurvey$LoyaltyBin[SatSurvey$"No. of other Loyalty Cards" == 0]=0
 SatSurvey$LoyaltyBin[SatSurvey$"No. of other Loyalty Cards" > 0]=1
-#Shopping Amount at Airport:  add a column with (0=non-shopper) and (1=shopper)
+# Shopping Amount at Airport:  add a column with (0=non-shopper) and (1=shopper)
 SatSurvey$ShopperBin[SatSurvey$"Shopping Amount at Airport" == 0]=0
 SatSurvey$ShopperBin[SatSurvey$"Shopping Amount at Airport" > 0]=1
 
-#Eating and Drinking at Airport:  add a column with (0=non-diner) and (1=diner)
+# Eating and Drinking at Airport:  add a column with (0=non-diner) and (1=diner)
 SatSurvey$DinerBin[SatSurvey$"Eating and Drinking at Airport" == 0]=0
 SatSurvey$DinerBin[SatSurvey$"Eating and Drinking at Airport" > 0]=1
 # Imputes values over 100  
@@ -58,19 +58,20 @@ for (i in 1:veclength){
 
 #-------Clean the data within a function-------
 
-CleanData <- function(inputDF) # function to clean satisfaction survey data set
+CleanData <- function(inputDF) # Function to clean satisfaction survey data set
 {
   d <- inputDF
   
-  # transform column names to new names without spaces
+  # Transform column names to new names without spaces
   names(d)<-make.names(names(d),unique = TRUE)
   names(d)[8]<-paste("Percent.of.Flight.with.Other.Airlines")
   
-  # Remove cases with misrepresented satisfaction ratings (i.e., NOT 1:5 integers)
+  # Remove cases with misrepresented satisfaction ratings 
+  # (i.e., NOT 1:5 integers)
   d <- d[!is.na(d$Satisfaction), ]
   d <- d[d$Satisfaction==1 | d$Satisfaction==2 | d$Satisfaction==3 | d$Satisfaction==4 | d$Satisfaction==5, ]
   
-  #Code down flight with other airlines values over 100%, down to 100%
+  # Code down flight with other airlines values over 100%, down to 100%
   d$Percent.of.Flight.with.Other.Airlines[d$Percent.of.Flight.with.Other.Airlines>100] <- 100
   
   #remove records with no flight time AND does not say their flight was canceled
@@ -87,34 +88,34 @@ df <- CleanData(SatSurvey)
 
 #-------Let's view the clean data file specs-------
 
-#display the specs of the columns
+# Display the specs of the columns
 str(df)
 
 #-------Creating variables for analysis-------
 
 library(ggplot2)
-#No. of other Loyalty Cards:  add a column with (0=none) and (1=loyalty member)
+# No. of other Loyalty Cards:  add a column with (0=none) and (1=loyalty member)
 length(df$No..of.other.Loyalty.Cards[df$No..of.other.Loyalty.Cards=='NA']) # check for NAs
 df$LoyaltyCardCat <- ifelse(df$No..of.other.Loyalty.Cards>0, "Member", "Non-Member")
 g <- ggplot(df, aes(x=LoyaltyCardCat))
 g <- g + geom_bar(color='black', fill='gray')
 g
 
-#Shopping Amount at Airport:  add a column with (0=non-shopper) and (1=shopper)
+# Shopping Amount at Airport:  add a column with (0=non-shopper) and (1=shopper)
 length(df$Shopping.Amount.at.Airport[df$Shopping.Amount.at.Airport=='NA']) # check for NAs
 df$ShoppingCat <- ifelse(df$Shopping.Amount.at.Airport>0, "Shopper", "Non-Shopper")
 g <- ggplot(df, aes(x=ShoppingCat))
 g <- g + geom_bar(color='black', fill='gray')
 g
 
-#Eating and Drinking at Airport:  add a column with (0=non-diner) and (1=diner)
+# Eating and Drinking at Airport:  add a column with (0=non-diner) and (1=diner)
 length(df$Eating.and.Drinking.at.Airport[df$Eating.and.Drinking.at.Airport=='NA']) # check for NAs
 df$DinerCat <- ifelse(df$Eating.and.Drinking.at.Airport>0, "Diner", "Non-diner")
 g <- ggplot(df, aes(x=DinerCat))
 g <- g + geom_bar(color='black', fill='gray')
 g # we see there isn't many non-diners for analysis
 
-#Create satisfaction variable coded (4-5, 3, 1-2)
+# Create satisfaction variable coded (4-5, 3, 1-2)
 df$Satisfaction.Coded <- ifelse(df$Satisfaction==5, "4-5", ifelse(df$Satisfaction==4, "4-5", ifelse(df$Satisfaction==3, "3", ifelse(df$Satisfaction==2, "1-2",ifelse(df$Satisfaction==1, "1-2", 'NA'))))) 
 
 #-------Satisfaction by Airline Visualized as Counts-------
@@ -154,7 +155,7 @@ g <- g + coord_cartesian(ylim = c (1, 5))
 # [MGS] Not sure how to add data labels
 g
 
-#display the specs of the columns
+# Display the specs of the columns
 spec(SatSurvey)
 
 #Display in table
@@ -282,9 +283,6 @@ View(UniqueDC)
 
 
 #-------Clean the data within a function-------
-
-
-
 CleanData <- function() # function to clean satisfaction survey data set
   
 {
@@ -293,7 +291,7 @@ CleanData <- function() # function to clean satisfaction survey data set
   
   
   
-  # transform column names to new names without spaces
+  # Transform column names to new names without spaces
   
   names(d)<-make.names(names(d),unique = TRUE)
   
@@ -309,27 +307,28 @@ CleanData <- function() # function to clean satisfaction survey data set
   
   
   
-  #Code down flight with other airlines values over 100%, down to 100%
+  # Code down flight with other airlines values over 100%, down to 100%
   
   d$Percent.of.Flight.with.Other.Airlines[d$Percent.of.Flight.with.Other.Airlines>100] <- 100
   
   
   
-  #remove records with no flight time AND does not say their flight was canceled
+  # Remove records with no flight time AND does not say their flight was canceled
   
-  #we feel these records aren't intuitive and therefore not useful, perhaps captured incorrectly
+  # These records aren't intuitive and therefore not useful, 
+  # perhaps captured incorrectly
   
   d <- d[!(is.na(d$Arrival.Delay.in.Minutes) & is.na(d$Flight.time.in.minutes) & d$Flight.cancelled=="No"),]
   
   
   
-  #add a unique identifier
+  # Add a unique identifier
   
   d$Unique <- c(1:129543)
   
   
   
-  #convert flight.date to date format
+  # Convert flight.date to date format
   
   d$Flight.date <- as.Date(d$Flight.date , format = "%m/%d/%Y")
   
@@ -345,7 +344,7 @@ df <- CleanData()
 
 ####------------Create new variables----------
 
-#variable creation
+# Variable creation
 
 length(df$No..of.other.Loyalty.Cards[df$No..of.other.Loyalty.Cards=='NA']) # check for NAs
 
@@ -359,7 +358,7 @@ length(df$Eating.and.Drinking.at.Airport[df$Eating.and.Drinking.at.Airport=='NA'
 
 df$DinerCat <- ifelse(df$Eating.and.Drinking.at.Airport>0, "Diner", "Non-Diner")
 
-#Create satisfaction variable coded (4-5, 3, 1-2)
+# Create satisfaction variable coded (4-5, 3, 1-2)
 
 df$Satisfaction.Coded <- ifelse(df$Satisfaction==5, "4-5", ifelse(df$Satisfaction==4, "4-5", ifelse(df$Satisfaction==3, "3", ifelse(df$Satisfaction==2, "1-2",ifelse(df$Satisfaction==1, "1-2", 'NA')))))
 
@@ -367,45 +366,45 @@ df$Satisfaction.Coded <- ifelse(df$Satisfaction==5, "4-5", ifelse(df$Satisfactio
 
 
 
-#-------convert to binary----------
+#-------Convert to binary----------
 
 
 
-#No. of other Loyalty Cards:  add a column with (0=none) and (1=loyalty member)
+# No. of other Loyalty Cards:  add a column with (0=none) and (1=loyalty member)
 
 
 
-df$LoyaltyBin<- ifelse(df$No..of.other.Loyalty.Cards>0, 1, 0)
+df$LoyaltyBin <- ifelse(df$No..of.other.Loyalty.Cards>0, 1, 0)
 
 #df$LoyaltyBin<-as.factor(df$LoyaltyBin)
 
-#Shopping Amount at Airport:  add a column with (0=non-shopper) and (1=shopper)
+# Shopping Amount at Airport:  add a column with (0=non-shopper) and (1=shopper)
 
-df$ShopperBin<- ifelse(df$Shopping.Amount.at.Airport>0, 1, 0)
+df$ShopperBin <- ifelse(df$Shopping.Amount.at.Airport>0, 1, 0)
 
 #df$ShopperBin<-as.factor(df$ShopperBin)
 
-#Eating and Drinking at Airport:  add a column with (0=non-diner) and (1=diner)
+# Eating and Drinking at Airport:  add a column with (0=non-diner) and (1=diner)
 
-df$DinerBin<- ifelse(df$Eating.and.Drinking.at.Airport>0, 1, 0)
+df$DinerBin <- ifelse(df$Eating.and.Drinking.at.Airport>0, 1, 0)
 
 #df$DinerBin<-as.factor(df$DinerBin)
 
-#gender bin male=1
+# Gender bin male=1
 
-df$GenderBin<- ifelse(df$Gender=="Male", 1, 0)
+df$GenderBin <- ifelse(df$Gender=="Male", 1, 0)
 
 #df$GenderBin<-as.factor(df$GenderBin)
 
-#canceled bin
+# Canceled bin
 
-df$Flight.canceledBin<- ifelse(df$Flight.cancelled=="yes", 1, 0)
+df$Flight.canceledBin <- ifelse(df$Flight.cancelled=="yes", 1, 0)
 
 #df$Flight.canceledBin<-as.factor(df$Flight.canceledBin)
 
-#convert Travel type
+# Convert Travel type
 
-df$Type.of.Travel.Business<- ifelse(df$Type.of.Travel=="Business travel", 1, 0)
+df$Type.of.Travel.Business <- ifelse(df$Type.of.Travel=="Business travel", 1, 0)
 
 #df$Type.of.Travel.Business<-as.factor(df$Type.of.Travel.Business)
 
@@ -413,7 +412,7 @@ df$Type.of.Travel.Personal<- ifelse(df$Type.of.Travel=="Personal Travel", 1, 0)
 
 #df$Type.of.Travel.Personal<-as.factor(df$Type.of.Travel.Personal)
 
-#Convert Status
+# Convert Status
 
 df$Airline.Status.Blue<- ifelse(df$Airline.Status=="Blue", 1, 0)
 
@@ -429,7 +428,7 @@ df$Airline.Status.Gold<- ifelse(df$Airline.Status=="Gold", 1, 0)
 
 
 
-#Convert Class
+# Convert Class
 
 df$Class.Eco<- ifelse(df$Class=="Eco", 1, 0)
 
@@ -457,7 +456,8 @@ dfLMModel<-data.frame(df$Satisfaction,df$Age,df$Price.Sensitivity,df$No.of.Fligh
 
 str(dfLMModel)
 
-dfLMModel <- na.omit(dfLMModel) #Remove NAs from linear model df, we want data across these variables
+# Remove NAs from linear model df, we want data across these variables
+dfLMModel <- na.omit(dfLMModel)
 
 
 
@@ -493,23 +493,23 @@ m4 <- lm(formula = df.Satisfaction ~ df.Age + df.Price.Sensitivity +
            df.GenderBin, data = dfLMModel)
 summary(m4)
 
-#create train/test dfs
+# Create train/test dfs
 
-nrow.df<-nrow(dfLMModel) #total observations
+nrow.df<-nrow(dfLMModel) # Total observations
 
-cutPoint<-floor(nrow.df/3*2)#2/3 of the count
+cutPoint<-floor(nrow.df/3*2) # 2/3 of the count
 
-rand<-sample(1:nrow.df)#randomize rows
+rand<-sample(1:nrow.df) # Randomize rows
 
-df.train<-dfLMModel[rand[1:cutPoint],]#create train dataset
+df.train<-dfLMModel[rand[1:cutPoint],] # Create train dataset
 
 dim(df.train)
 
-df.test<-dfLMModel[rand[(cutPoint+1):nrow.df],]#create test dataset
+df.test<-dfLMModel[rand[(cutPoint+1):nrow.df],] # Create test dataset
 
 dim(df.test)
 
-####root mean squared error
+#### Root Mean Squared Error
 
 # ksvm practice
 #ksvmOutput <- ksvm(df.Satisfaction~., data=df.train, kernel="rbfdot", kpar="automatic",
