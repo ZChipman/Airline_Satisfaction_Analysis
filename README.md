@@ -33,3 +33,27 @@ Attributes.docx: Explains the meaning of each column in the Excel file.
 ## Technical Requirements:
 
 Any application running R (like R Studio) should be able to replicate this project. If there are any instances of deprecated code when using more recent versions of R, feel free to let me know.
+
+## Development:
+
+### Data Cleaning and Transformation:
+
+Our team performed the following steps to clean and transform the data for analysis:
+
+1.	Replace blanks with NAs. 
+
+2.	Transform column names.
+
+3.	Remove 9 cases with misrepresented satisfaction ratings.
+
+4.	Impute the values of the “Percent of Flight with other Airlines” column that were greater than 100%.
+
+5.	Remove records that do not have a flight time or arrival delay metric AND do not say their flight was cancelled.
+
+6.	Added an index, or what we called an “Unique Identifier,” column to the dataframe.
+
+7.	Added an initial set of NEW variables for analysis. 
+
+8.	Converted categorical variables to binary, and satisfaction to binary (4-5) vs. (1-3) for our classification models. 
+
+
