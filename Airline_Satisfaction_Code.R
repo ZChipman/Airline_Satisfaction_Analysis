@@ -44,21 +44,25 @@ CleanData <- function() # function to clean satisfaction survey data set
   names(d)<-make.names(names(d),unique = TRUE)
   names(d)[8]<-paste("Percent.of.Flight.with.Other.Airlines")
   
-  # Remove cases with misrepresented satisfaction ratings (i.e., NOT 1:5 integers)
+  # Remove cases with misrepresented satisfaction ratings 
+  # (i.e., NOT 1:5 integers)
   d <- d[!is.na(d$Satisfaction), ]
-  d <- d[d$Satisfaction==1 | d$Satisfaction==2 | d$Satisfaction==3 | d$Satisfaction==4 | d$Satisfaction==5, ]
+  d <- d[d$Satisfaction==1 | d$Satisfaction==2 | d$Satisfaction==3 | 
+           d$Satisfaction==4 | d$Satisfaction==5, ]
   
   #Code down flight with other airlines values over 100%, down to 100%
   d$Percent.of.Flight.with.Other.Airlines[d$Percent.of.Flight.with.Other.Airlines>100] <- 100
   
-  #remove records with no flight time AND does not say their flight was canceled
-  #we feel these records aren't intuitive and therefore not useful, perhaps captured incorrectly 
-  d <- d[!(is.na(d$Arrival.Delay.in.Minutes) & is.na(d$Flight.time.in.minutes) & d$Flight.cancelled=="No"),]
+  # Remove records with no flight time AND does not say their flight was 
+  # canceled, we feel these records aren't intuitive and therefore not useful, 
+  # perhaps captured incorrectly 
+  d <- d[!(is.na(d$Arrival.Delay.in.Minutes) & is.na(d$Flight.time.in.minutes) 
+           & d$Flight.cancelled=="No"),]
   
-  #add a unique identifier
+  # Add a unique identifier
   d$Unique <- c(1:129543)
   
-  #convert flight.date to date format
+  # Convert flight.date to date format
   d$Flight.date <- as.Date(d$Flight.date , format = "%m/%d/%Y")
   
   return(d)
@@ -68,15 +72,92 @@ df <- CleanData()
 
 #-------Let's view the clean data file specs-------
 
-#display the specs of the columns
+# Display the specs of the columns
 str(df)
 
 #------------Create new variables----------
-#variable creation
-length(df$No..of.other.Loyalty.Cards[df$No..of.other.Loyalty.Cards=='NA']) # check for NAs df$LoyaltyCardCat <- ifelse(df$No..of.other.Loyalty.Cards>0, "Member", "Non-Member") length(df$Shopping.Amount.at.Airport[df$Shopping.Amount.at.Airport=='NA']) # check for NAs df$ShoppingCat <- ifelse(df$Shopping.Amount.at.Airport>0, "Shopper", "Non-Shopper") length(df$Eating.and.Drinking.at.Airport[df$Eating.and.Drinking.at.Airport=='NA']) # check for NAs df$DinerCat <- ifelse(df$Eating.and.Drinking.at.Airport>0, "Diner", "Non-Diner")
-#Create satisfaction variable coded (4-5, 3, 1-2)
-df$Satisfaction.Coded <- ifelse(df$Satisfaction==5, "4-5", ifelse(df$Satisfaction==4, "4-5", ifelse(df$Satisfaction==3, "3", ifelse(df$Satisfaction==2, "1-2",ifelse(df$Satisfaction==1, "1-2", 'NA')))))
+# Variable creation
+# Check for NAs 
+length(df$No..of.other.Loyalty.Cards[df$No..of.other.Loyalty.Cards=='NA'])  
+df$LoyaltyCardCat <- ifelse(df$No..of.other.Loyalty.Cards>0, "Member", 
+                            "Non-Member") 
+length(df$Shopping.Amount.at.Airport[df$Shopping.Amount.at.Airport=='NA']) 
+df$ShoppingCat <- ifelse(df$Shopping.Amount.at.Airport>0, "Shopper", 
+                         "Non-Shopper") 
+length(df$Eating.and.Drinking.at.Airport[df$Eating.and.Drinking.at.Airport=='NA'])  
+df$DinerCat <- ifelse(df$Eating.and.Drinking.at.Airport>0, "Diner", "Non-Diner")
+# Create satisfaction variable coded (4-5, 3, 1-2)
+df$Satisfaction.Coded <- ifelse(df$Satisfaction==5, "4-5", 
+                                ifelse(df$Satisfaction==4, "4-5", 
+                                       ifelse(df$Satisfaction==3, "3", 
+                                              ifelse(df$Satisfaction==2, "1-2", 
+                                                     ifelse(df$Satisfaction==1, 
+                                                            "1-2", 'NA')))))
 
+#-------Convert to Binary----------
+
+# No. of other Loyalty Cards: add a column with (0=none) and (1=loyalty member)
+df$LoyaltyBin<- ifelse(df$No..of.other.Loyalty.Cards>0, 1, 0) 
+df$LoyaltyBin<-as.factor(df$LoyaltyBin)
+# Shopping Amount at Airport: add a column with (0=non-shopper) and (1=shopper) 
+df$ShopperBin<- ifelse(df$Shopping.Amount.at.Airport>0, 1, 0) 
+df$ShopperBin<-as.factor(df$ShopperBin)
+# Eating and Drinking at Airport: add a column with (0=non-diner) and (1=diner) 
+df$DinerBin<- ifelse(df$Eating.and.Drinking.at.Airport>0, 1, 0) 
+df$DinerBin<-as.factor(df$DinerBin)
+# Gender bin male=1
+df$GenderBin<- ifelse(df$Gender=="Male", 1, 0) 
+df$GenderBin<-as.factor(df$GenderBin)
+# Canceled bin
+df$Flight.canceledBin<- ifelse(df$Flight.cancelled=="yes", 1, 0) 
+df$Flight.canceledBin<-as.factor(df$Flight.canceledBin)
+
+# Convert Travel Type
+df$Type.of.Travel.Business <- ifelse(df$Type.of.Travel=="Business travel", 1, 0)
+df$Type.of.Travel.Business<-as.factor(df$Type.of.Travel.Business)
+df$Type.of.Travel.Personal<- ifelse(df$Type.of.Travel=="Personal Travel", 1, 0)
+df$Type.of.Travel.Personal<-as.factor(df$Type.of.Travel.Personal)
+
+# Convert Status
+df$Airline.Status.Blue<- ifelse(df$Airline.Status=="Blue", 1, 0)
+df$Airline.Status.Blue<-as.factor(df$Airline.Status.Blue)
+df$Airline.Status.Silver<- ifelse(df$Airline.Status=="Silver", 1, 0)
+df$Airline.Status.Silver<-as.factor(df$Airline.Status.Silver)
+df$Airline.Status.Gold<- ifelse(df$Airline.Status=="Gold", 1, 0)
+df$Airline.Status.Gold<-as.factor(df$Airline.Status.Gold)
+
+# Convert Class
+df$Class.Eco<- ifelse(df$Class=="Eco", 1, 0)
+df$Class.Eco<-as.factor(df$Class.Eco)
+df$Class.EcoPlus<- ifelse(df$Class=="Eco Plus", 1, 0)
+df$Class.EcoPlus<-as.factor(df$Class.EcoPlus)
+
+
+#---------------------------------------------------- 
+# Modeling 
+#----------------------------------------------------
+
+
+#------------Create Linear Model Dataframe-------------
+
+dfLMModel<-data.frame(df$Satisfaction,df$Age,df$Price.Sensitivity,
+                      df$No.of.Flights.p.a.,df$No..of.other.Loyalty.Cards,
+                      df$Shopping.Amount.at.Airport,
+                      df$Eating.and.Drinking.at.Airport,
+                      df$Departure.Delay.in.Minutes,df$Arrival.Delay.in.Minutes,
+                      df$Flight.canceledBin,df$Flight.time.in.minutes,
+                      df$Flight.Distance,df$Airline.Status.Blue,
+                      df$Airline.Status.Gold,df$Airline.Status.Silver,
+                      df$Type.of.Travel.Business,df$Type.of.Travel.Personal,
+                      df$Class.Eco,df$Class.EcoPlus,df$GenderBin)
+
+str(dfLMModel)
+
+model.all<-lm(df.Satisfaction~.,data=dfLMModel)
+summary(model.all)
+
+
+# ------Old Code ----------------------------
 #-------Creating variables for analysis-------
 
 library(ggplot2)
