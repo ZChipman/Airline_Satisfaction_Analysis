@@ -56,7 +56,7 @@ Our team performed the following steps to clean and transform the data for analy
 
 8.	Converted categorical variables to binary, and satisfaction to binary (4-5) vs. (1-3) for our classification models. 
 
-## Notes:
+## Current Project Status:
 
-I am currently revising the code, so it does not currently run properly. A working version of the original code can be found at the end of the original report.
+I am currently revising and cleaning the code, making it easier to read and understand. A working version of the original code can be found at the end of the original report. 
 
