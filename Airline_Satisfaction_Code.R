@@ -156,3 +156,65 @@ str(dfLMModel)
 
 model.all<-lm(df.Satisfaction~.,data=dfLMModel)
 summary(model.all)
+
+# Note: change variable names
+
+# First model iteration
+# Remove loyalty cards (not significant)
+iter.1 <- dfLMModel[,-5]
+str(iter.1)
+model.iter1 <- lm(df.Satisfaction~., data=iter.1)
+summary(model.iter1)
+
+# Second model iteration
+# Remove Eating and Drinking (only significant at 90%)
+iter.2 <- iter.1[,-6]
+str(iter.2)
+model.iter2 <- lm(df.Satisfaction~., data=iter.2)
+summary(model.iter2)
+
+# Iteration 3
+# Remove departure delay due to colinearity with arrival delay
+iter.3 <- iter.2[,-6]
+str(iter.3)
+model.iter3 <- lm(df.Satisfaction~., data=iter.3)
+summary(model.iter3)
+
+# Export to file for easier copy/paste
+# sink("iter3.txt")
+# print(summary(model.iter3))
+# sink()
+
+iter.3_coef <- summary(model.iter3)$coefficients
+iter.3_coef
+
+# Sets random seed (not in original project)
+set.seed(14)
+
+# Create Train/Test df for Iteration 3
+nrow.df <- nrow(iter.3) # Total observations
+cutPoint <- floor(nrow.df/3*2) # 2/3 split
+rand <- sample(1:nrow.df) # randomize rows
+df.train <- iter.3[rand[1:cutPoint],] # Create train data set
+dim(df.train)
+df.test <- iter.3[rand[(cutPoint+1):nrow.df],] # Create test data set
+dim(df.test)
+
+# Root Mean Squared Error
+# Note: fix function
+rmse <- function(error)
+{
+  sqrt(mean(error^2))
+}
+
+# LM Model
+lm.model <- lm(df.Satisfaction~., data=df.train)
+summary(lm.model)
+# Export to file for easier copy/paste
+# sink("lm.txt")
+# print(summary(lm.model))
+# sink 
+pred.lm <- predict(lm.model, df.test)
+df.test$error1 <- df.test$df.Satisfaction - pred.lm
+head(df.test)
+rmse(df.test$error1)
