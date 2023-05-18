@@ -218,3 +218,15 @@ pred.lm <- predict(lm.model, df.test)
 df.test$error1 <- df.test$df.Satisfaction - pred.lm
 head(df.test)
 rmse(df.test$error1)
+
+# SVM
+svm.model<-svm(df.Satisfaction~.,data=df.train)
+summary(svm.model)
+# Export to file for easier copy/paste
+# sink("svm.txt")
+# print(summary(svm.model))
+# sink() # Returns output to the console
+pred.svm <- predict(svm.model, df.test)
+df.test$error2 <- df.test$df.Satisfaction - pred.svm
+head(df.test)
+rmse(df.test$error2)
