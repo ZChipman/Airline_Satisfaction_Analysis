@@ -230,3 +230,27 @@ pred.svm <- predict(svm.model, df.test)
 df.test$error2 <- df.test$df.Satisfaction - pred.svm
 head(df.test)
 rmse(df.test$error2)
+
+# kSVM
+ksvm.model<-ksvm(df.Satisfaction~.,data=df.train)
+summary(ksvm.model)
+# Export to file for easier copy/paste
+# sink("ksvm.txt")
+# print(summary(ksvm.model))
+# sink() # Returns output to the console
+pred.ksvm <- predict(svm.model, df.test)
+df.test$error3 <- df.test$df.Satisfaction - pred.ksvm
+head(df.test)
+rmse(df.test$error3)
+
+# Recode variable for Satisfaction
+iter.4 <- iter.3
+iter.4$SatifactionClass <- ifelse(iter.4$df.Satisfaction==5, "1", 
+                           ifelse(iter.4$df.Satisfaction==4, "1",
+                           ifelse(iter.4$df.Satisfaction==3, "0",
+                           iflese(iter.4$df.Satisfaction==2, "0",
+                           ifelse(iter.4$df.Satisfaction==1, "0",
+                           "NA")))))
+str(iter.4)
+iter.4<-iter.4[,-1]
+iter.4$SatisfactionClass <- as.factor(iter.4$SatisfactionClass)
