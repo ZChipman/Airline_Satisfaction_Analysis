@@ -245,12 +245,231 @@ rmse(df.test$error3)
 
 # Recode variable for Satisfaction
 iter.4 <- iter.3
-iter.4$SatifactionClass <- ifelse(iter.4$df.Satisfaction==5, "1", 
+iter.4$SatisfactionClass <- ifelse(iter.4$df.Satisfaction==5, "1", 
                            ifelse(iter.4$df.Satisfaction==4, "1",
                            ifelse(iter.4$df.Satisfaction==3, "0",
-                           iflese(iter.4$df.Satisfaction==2, "0",
+                           ifelse(iter.4$df.Satisfaction==2, "0",
                            ifelse(iter.4$df.Satisfaction==1, "0",
                            "NA")))))
 str(iter.4)
 iter.4<-iter.4[,-1]
 iter.4$SatisfactionClass <- as.factor(iter.4$SatisfactionClass)
+
+# Create train/test dt for Iter.4
+nrow.df <- nrow(iter.4) # Total observations
+cutPoint <- floor(nrow.df/3*2) # 2/3 of the count
+rand <- sample(1:nrow.df) # Randomize rows
+df.train2 <- iter.4[rand[1:cutPoint],] # Create train data set
+dim(df.train2)
+df.test2 <- iter.4[rand[(cutPoint+1):nrow.df],] # Create test data set 
+dim(df.test2)
+
+# SVM
+svm.model.class <- svm(SatisfactionClass~., data = df.train2)
+# Export file for easier copy/paste
+# sink("svmclass.txt")
+print(summary(svm.model.class))
+# sink()
+# Review predictions 
+df.test2$predictSatSVM <- predict(svm.model.class, df.test2)
+str(df.test2)
+results <- table(df.test$SatisfactionClass, df.test2$predictSatSVM)
+print(results)
+percentCorrect <- (results[1,1] + results[2,2] / results[1,1] + results[1,2] + 
+                     results[2,1] + results[2,2]) * 100
+cat("Percent Correct: ", round(percentCorrect), "\n")
+
+# kSVM
+ksvm.model.class <- ksvm(SatisfactionClass~., data = df.train2)
+# Export file for easier copy/paste
+# sink("ksvmclass.txt")
+print(summary(ksvm.model.class))
+# sink()
+# Review predictions 
+df.test2$predictSatkSVM <- predict(ksvm.model.class, df.test2)
+str(df.test2)
+results <- table(df.test$SatisfactionClass, df.test2$predictSatkSVM)
+print(results)
+percentCorrect <- (results[1,1] + results[2,2] / results[1,1] + results[1,2] + 
+                     results[2,1] + results[2,2]) * 100
+cat("Percent Correct: ", round(percentCorrect), "\n")
+
+#-------Creating Variables for Analysis-------
+
+# No. of other Loyalty Cards:  add a column with (0=none) and (1=loyalty member)
+# Check for NAs
+length(df$No..of.other.Loyalty.Cards[df$No..of.other.Loyalty.Cards=='NA']) 
+df$LoyaltyCardCat <- ifelse(df$No..of.other.Loyalty.Cards>0, "Member", 
+                            "Non-Member")
+g <- ggplot(df, aes(x=LoyaltyCardCat))
+g <- g + geom_bar(color='black', fill='gray')
+g
+
+# Shopping Amount at Airport:  add a column with (0=non-shopper) and (1=shopper)
+# Check for NAs
+length(df$Shopping.Amount.at.Airport[df$Shopping.Amount.at.Airport=='NA']) 
+df$ShoppingCat <- ifelse(df$Shopping.Amount.at.Airport>0, "Shopper", 
+                         "Non-Shopper")
+g <- ggplot(df, aes(x=ShoppingCat))
+g <- g + geom_bar(color='black', fill='gray')
+g
+
+# Eating and Drinking at Airport:  add a column with (0=non-diner) and (1=diner)
+# Check for NAs
+length(df$Eating.and.Drinking.at.Airport[df$Eating.and.Drinking.at.Airport=='NA']) 
+df$DinerCat <- ifelse(df$Eating.and.Drinking.at.Airport>0, "Diner", "Non-diner")
+g <- ggplot(df, aes(x=DinerCat))
+g <- g + geom_bar(color='black', fill='gray')
+g 
+
+table(df$DinerCat) # We see there isn't many non-diners for analysis
+table(df$DinerCat) / length(df$DinerCat) # In fact, less than 5% are non-diners
+
+#-------Additional Feature Profile------
+
+# LOYALTY CARD
+TempDf <- data.frame(table(df$LoyaltyCardCat) / length(df$LoyaltyCardCat))
+TempDf
+g <- ggplot(TempDf, aes(x="", y=Freq, fill=Var1))
+g <- g + geom_bar(stat="identity", width=1, color="white")
+g <- g + coord_polar("y", start=0) + 
+  geom_text(aes(label=paste0(round(Freq*100), "%")), 
+            position=position_stack(vjust=0.5), color="white", size=5)
+g <- g + scale_fill_manual(values=c("dodgerblue4", "gray26")) 
+g <- g + labs(x = NULL, y = NULL, fill = NULL, title = "Loyalty Membership")
+g <- g + theme_classic() + theme(axis.line = element_blank(),
+                                 axis.text = element_blank(),
+                                 axis.ticks = element_blank(),
+                                 plot.title = element_text(hjust = 0.52, 
+                                 vjust=-5, color = "black", size=20),
+                                 legend.text = element_text(size=15))
+g
+
+# SHOPPER
+TempDf <- data.frame(table(df$ShoppingCat) / length(df$ShoppingCat))
+TempDf
+g <- ggplot(TempDf, aes(x="", y=Freq, fill=Var1))
+g <- g + geom_bar(stat="identity", width=1, color="white")
+g <- g + coord_polar("y", start=0) + geom_text(aes(label=paste0(round(Freq*100), 
+                                            "%")), 
+                                            position=position_stack(vjust=0.5), 
+                                            color="white", size=5)
+g <- g + scale_fill_manual(values=c("dodgerblue4", "gray26")) 
+g <- g + labs(x = NULL, y = NULL, fill = NULL, title = "Airport Shopping")
+g <- g + theme_classic() + theme(axis.line = element_blank(),
+                                 axis.text = element_blank(),
+                                 axis.ticks = element_blank(),
+                                 plot.title = element_text(hjust = 0.52, 
+                                 vjust=-5, color = "black", size=20),
+                                 legend.text = element_text(size=15))
+g
+
+# DINER
+TempDf <- data.frame(table(df$DinerCat) / length(df$DinerCat))
+TempDf
+g <- ggplot(TempDf, aes(x="", y=Freq, fill=Var1))
+g <- g + geom_bar(stat="identity", width=1, color="white")
+g <- g + coord_polar("y", start=0) + geom_text(aes(label=paste0(round(Freq*100), 
+                                     "%")), position=position_stack(vjust=0.5), 
+                                     color="white", size=5)
+g <- g + scale_fill_manual(values=c("dodgerblue4", "gray26")) 
+g <- g + labs(x = NULL, y = NULL, fill = NULL, title = "Airport Dining")
+g <- g + theme_classic() + theme(axis.line = element_blank(),
+                                 axis.text = element_blank(),
+                                 axis.ticks = element_blank(),
+                                 plot.title = element_text(hjust = 0.52, 
+                                 vjust=-5, color = "black", size=20),
+                                 legend.text = element_text(size=15))
+g
+
+#-------Demographic Profile-------
+#GENDER
+TempDf <- data.frame(table(df$Gender) / length(df$Gender))
+TempDf
+g <- ggplot(TempDf, aes(x="", y=Freq, fill=Var1))
+g <- g + geom_bar(stat="identity", color="white", width=0.35)
+g <- g + geom_text(aes(label=paste0(round(Freq*100), "%")), 
+                   position=position_stack(vjust=0.5), color="white", size=5)
+g <- g + scale_fill_manual(values=c("dodgerblue4", "gray26")) 
+g <- g + labs(x = NULL, y = NULL, fill = NULL, title = "Gender")
+g <- g + theme_classic() + theme(axis.line = element_blank(),
+                                 axis.text = element_blank(),
+                                 axis.ticks = element_blank(),
+                                 plot.title = element_text(hjust = 0.5, 
+                                 vjust=-1, color = "black", size=20),
+                                 legend.text = element_text(size=15),
+                                 legend.position = "bottom")
+g
+
+#AGE
+g <- ggplot(df, aes(x=Age))
+g <- g + geom_histogram(color="white", fill="dodgerblue4", binwidth=5)
+g <- g + labs(title = "Age Distribution") + 
+  theme(plot.title = element_text(hjust=0.5, vjust=2, size=20))
+g
+
+#-------Usage Profile-------
+#AIRLINE STATUS
+TempDf <- data.frame(table(df$Airline.Status) / length(df$Airline.Status))
+TempDf$Var1 <- factor(TempDf$Var1, levels=c("Blue", "Silver", "Gold", 
+                                            "Platinum"))
+TempDf
+g <- ggplot(TempDf, aes(x="", y=Freq, fill=Var1))
+g <- g + geom_bar(stat="identity", color="white", width=0.35)
+g <- g + geom_text(aes(label=paste0(round(Freq*100), "%")), 
+                   position=position_stack(vjust=0.5), color="white", size=5)
+g <- g + scale_fill_manual(values=c("blue4", "grey75","darkgoldenrod2", 
+                                    "gray35")) 
+g <- g + labs(x = NULL, y = NULL, fill = NULL, title = "Airline Status")
+g <- g + theme_classic() + theme(axis.line = element_blank(),
+                                 axis.text = element_blank(),
+                                 axis.ticks = element_blank(),
+                                 plot.title = element_text(hjust = 0.5, 
+                                 vjust=-1, color = "black", size=20),
+                                 legend.text = element_text(size=15),
+                                 legend.position = "right")
+g
+
+#NUMBER OF FLIGHTS
+g <- ggplot(df, aes(x=No.of.Flights.p.a.))
+g <- g + geom_histogram(color="white", fill="dodgerblue4", binwidth=5)
+g <- g + labs(title = "Number of Flights") + 
+  theme(plot.title = element_text(hjust=0.5, vjust=2, size=20))
+g
+
+#TYPE OF TRAVELER
+TempDf <- data.frame(table(df$Type.of.Travel) / length(df$Type.of.Travel))
+TempDf
+g <- ggplot(TempDf, aes(x="", y=Freq, fill=Var1))
+g <- g + geom_bar(stat="identity", width=1, color="white")
+g <- g + coord_polar("y", start=0) + geom_text(aes(label=paste0(round(Freq*100), 
+                                     "%")), position=position_stack(vjust=0.5), 
+                                     color="white", size=5)
+g <- g + scale_fill_manual(values=c("indianred3", "chartreuse3", "royalblue2")) 
+g <- g + labs(x = NULL, y = NULL, fill = NULL, title = "Type of Travel")
+g <- g + theme_classic() + theme(axis.line = element_blank(),
+                                 axis.text = element_blank(),
+                                 axis.ticks = element_blank(),
+                                 plot.title = element_text(hjust = 0.52, 
+                                 vjust=-5, color = "black", size=20),
+                                 legend.text = element_text(size=15))
+g
+
+#CLASS
+TempDf <- data.frame(table(df$Class) / length(df$Class))
+TempDf$Var1 <- factor(TempDf$Var1, levels=c("Eco", "Eco Plus", "Business"))
+TempDf
+g <- ggplot(TempDf, aes(x="", y=Freq, fill=Var1))
+g <- g + geom_bar(stat="identity", color="white", width=0.35)
+g <- g + geom_text(aes(label=paste0(round(Freq*100), "%")), 
+                   position=position_stack(vjust=0.5), color="white", size=5)
+g <- g + scale_fill_manual(values=c("dodgerblue1", "dodgerblue4","black")) 
+g <- g + labs(x = NULL, y = NULL, fill = NULL, title = "Class")
+g <- g + theme_classic() + theme(axis.line = element_blank(),
+                                 axis.text = element_blank(),
+                                 axis.ticks = element_blank(),
+                                 plot.title = element_text(hjust = 0.5, 
+                                 vjust=-1, color = "black", size=20),
+                                 legend.text = element_text(size=15),
+                                 legend.position = "left")
+
