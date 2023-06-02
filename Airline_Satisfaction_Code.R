@@ -150,6 +150,10 @@ dfLMModel <- data.frame(df$Satisfaction,df$Age,df$Price.Sensitivity,
                       df$Type.of.Travel.Personal,
                       df$Class.Eco,df$Class.EcoPlus,df$GenderBin)
 
+
+# Remove NAs from linear model
+# We want data across these variables
+dfLMModel <- na.omit(dfLMModel)
 str(dfLMModel)
 
 model.all<-lm(df.Satisfaction~.,data=dfLMModel)
@@ -202,7 +206,7 @@ dim(df.test)
 # Note: fix function
 rmse <- function(error)
 {
-  sqrt(mean(na.omit(error)^2))
+  sqrt(mean(error^2))
 }
 
 # LM Model
