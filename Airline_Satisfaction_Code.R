@@ -132,8 +132,6 @@ df$Class.Eco<-as.factor(df$Class.Eco)
 df$Class.EcoPlus<- ifelse(df$Class=="Eco Plus", 1, 0)
 df$Class.EcoPlus<-as.factor(df$Class.EcoPlus)
 
-
-class(df$Flight.canceledBin)
 #---------------------------------------------------- 
 # Modeling 
 #----------------------------------------------------
@@ -204,7 +202,7 @@ dim(df.test)
 # Note: fix function
 rmse <- function(error)
 {
-  sqrt(mean(error^2))
+  sqrt(mean(na.omit(error)^2))
 }
 
 # LM Model
@@ -215,9 +213,11 @@ summary(lm.model)
 # print(summary(lm.model))
 # sink 
 pred.lm <- predict(lm.model, df.test)
+# print(pred.lm)
 df.test$error1 <- df.test$df.Satisfaction - pred.lm
 head(df.test)
 rmse(df.test$error1)
+# sqrt(mean((df.test$error1)^2))
 
 # SVM
 svm.model<-svm(df.Satisfaction~.,data=df.train)
