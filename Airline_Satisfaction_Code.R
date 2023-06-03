@@ -1,5 +1,8 @@
 # Specify the packages of interest
-packages=c("maps","zipcode","mapproj","ggmap","ggplot2","readxl")
+packages=c("maps","zipcode","mapproj","ggmap","ggplot2","readxl","lmtest")
+
+install.packages("MASS", dependencies=TRUE)
+install.packages("car", dependencies=TRUE)
 
 # Use this function to check if each package is on the local machine
 # If a package is installed, it will be loaded
@@ -21,6 +24,9 @@ library(ggplot2)
 library(gridExtra)
 library(caret)
 library(readxl)
+library(lmtest)
+library(MASS)
+library(car)
 
 #-------Read in the RAW data-------
 
@@ -159,8 +165,6 @@ str(dfLMModel)
 model.all<-lm(df.Satisfaction~.,data=dfLMModel)
 summary(model.all)
 
-# Note: change variable names
-
 # First model iteration
 # Remove loyalty cards (not significant)
 iter.1 <- dfLMModel[,-5]
@@ -222,6 +226,13 @@ df.test$error1 <- df.test$df.Satisfaction - pred.lm
 head(df.test)
 rmse(df.test$error1)
 # sqrt(mean((df.test$error1)^2))
+
+# Checking for non-linearity within the data
+resettest(df.Satisfaction~., power=2:3, type='regressor', data=df.train)
+
+summary(df.train$df.Age)
+
+boxTidwell(df.Satisfaction~df.Flight.time.in.minutes, data=df.train, tol=0.001, max.iter=25)
 
 # SVM
 svm.model<-svm(df.Satisfaction~.,data=df.train)
