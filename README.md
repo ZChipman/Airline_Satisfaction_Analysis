@@ -56,7 +56,14 @@ Our team performed the following steps to clean and transform the data for analy
 
 8.	Converted categorical variables to binary, and satisfaction to binary (4-5) vs. (1-3) for our classification models. 
 
-## Current Project Status:
+### Models:
 
-I am currently revising and cleaning the code, making it easier to read and understand. A working version of the original code can be found at the end of the original report. 
+While our best predictive model is our SVM, our final model is the Linear Model with the variables displayed in the below table. This model is clearest for us to evaluate as the coefficients are easy to interpret. We found whether a traveler is a personal traveler has the largest impact on the passenger’s satisfaction and that impact is negative. Airline Status is the next highest, with gender, class, and prices sensitivity also being notable variables. Surprisingly, delays seem to be less impactful than we initially thought, with the caveat that as arrival delays get longer (40 minutes +), they become a more important negative variable. 
 
+![image](https://github.com/ZChipman/Airline_Satisfaction_Analysis/assets/87530934/b14f063c-0105-4487-9c24-a21f584084ac)
+
+## Interpretation of Results:
+
+1. Satisfaction is driven by factors outside of which airlines these customers use. All airlines show room for improvement, with ~50% of customers satisfied (rating of 4 or 5) across the industry.
+2. Airlines should consider focused efforts on improving the experience among personal travelers by conducting a deep dive analysis, speaking to customers directly using a marketing research initiative. 
+3. Continue to examine why Silver status members are more satisfied than Gold+ members and try to reduce delays in the Northeast. 
