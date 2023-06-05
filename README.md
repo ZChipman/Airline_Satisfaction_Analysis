@@ -56,7 +56,46 @@ Our team performed the following steps to clean and transform the data for analy
 
 8.	Converted categorical variables to binary, and satisfaction to binary (4-5) vs. (1-3) for our classification models. 
 
-## Current Project Status:
+### Visualizations:
 
-I am currently revising and cleaning the code, making it easier to read and understand. A working version of the original code can be found at the end of the original report. 
+Below are the most noteworthy images from our analysis, more can be found in the written report.
 
+#### Origin/Destination State Frequency & Average Departure/Arrival Delays:
+
+One of our data questions asked how impactful departure and arrival delays were to customer satisfaction. To help answer this question, we wanted to pinpoint the locations that have the highest average delays. On the maps below, delays are marked by red circles, with the larger circles being states with the highest average delays.
+
+CA & TX have the most flights originating, followed by FL. VT, DE, and WV have significant room for improvement on departure delays. The Northeast is more likely to have delays, perhaps impacted by weather conditions.  
+
+![image](https://github.com/ZChipman/Airline_Satisfaction_Analysis/assets/87530934/a439585a-9403-4d6b-8e04-3d194d99d4b5)
+
+![image](https://github.com/ZChipman/Airline_Satisfaction_Analysis/assets/87530934/8f99204c-11a5-477c-8faa-01ec8cb51fa2)
+
+#### Average Satisfaction by Airline:
+
+This visualization shows the average satisfaction across airlines sorted by performance confirms significant differences are not present.  Therefore, the analysis that follows is on the airline industry, keeping these airlines aggregated. 
+
+![image](https://github.com/ZChipman/Airline_Satisfaction_Analysis/assets/87530934/396c2050-3a74-4e84-aaa9-98289050bfd9)
+
+#### Satisfaction by Traveler Type:
+
+Mileage Tickets and Business Travel have proportionally greater satisfaction; with those using Mileage Tickets having the lowest proportion of dissatisfied customers. This chart also shows that the largest customer base across all airlines is Business Travelers. 
+
+![image](https://github.com/ZChipman/Airline_Satisfaction_Analysis/assets/87530934/6b3c4c7f-64b7-4444-9dac-a2b7db4d4400)
+
+#### Satisfaction by Airline Status:
+
+Airline performance on satisfaction appears to peak at “Silver” status. Personal Platinum status customers are the least satisfied.  Are Gold and Platinum tiers offering perks that appeal to these types of customers?  Are all 4 status types necessary?  Personal Platinum status customers are the LEAST satisfied.
+
+![image](https://github.com/ZChipman/Airline_Satisfaction_Analysis/assets/87530934/6e5b708a-b070-4738-9610-d796d8e19645)
+
+### Models:
+
+While our best predictive model is our SVM (with a prediction accuracy of 79%), our final model is the Linear Model with the variables displayed in the below table. This model is clearest for us to evaluate as the coefficients are easy to interpret. We found whether a traveler is a personal traveler has the largest impact on the passenger’s satisfaction and that impact is negative. Airline Status is the next highest, with gender, class, and prices sensitivity also being notable variables. Surprisingly, delays seem to be less impactful than we initially thought, with the caveat that as arrival delays get longer (40 minutes +), they become a more important negative variable. 
+
+![image](https://github.com/ZChipman/Airline_Satisfaction_Analysis/assets/87530934/b14f063c-0105-4487-9c24-a21f584084ac)
+
+## Interpretation of Results:
+
+1. Satisfaction is driven by factors outside of which airlines these customers use. All airlines show room for improvement, with ~50% of customers satisfied (rating of 4 or 5) across the industry.
+2. Airlines should consider focused efforts on improving the experience among personal travelers by conducting a deep dive analysis, speaking to customers directly using a marketing research initiative. 
+3. Continue to examine why Silver status members are more satisfied than Gold+ members and try to reduce delays in the Northeast. 
