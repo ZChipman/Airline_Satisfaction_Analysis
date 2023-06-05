@@ -1,8 +1,8 @@
 # Specify the packages of interest
 packages=c("maps","zipcode","mapproj","ggmap","ggplot2","readxl","lmtest")
 
-install.packages("MASS", dependencies=TRUE)
-install.packages("car", dependencies=TRUE)
+# install.packages("MASS", dependencies=TRUE)
+# install.packages("car", dependencies=TRUE)
 
 # Use this function to check if each package is on the local machine
 # If a package is installed, it will be loaded
@@ -25,8 +25,8 @@ library(gridExtra)
 library(caret)
 library(readxl)
 library(lmtest)
-library(MASS)
-library(car)
+# library(MASS)
+# library(car)
 
 #-------Read in the RAW data-------
 
@@ -100,6 +100,7 @@ df$Satisfaction.Coded <- ifelse(df$Satisfaction==5, "4-5",
                                                      ifelse(df$Satisfaction==1, 
                                                             "1-2", 'NA')))))
 
+str(df$Satisfaction.Coded)
 #-------Convert to Binary----------
 
 # No. of other Loyalty Cards: add a column with (0=none) and (1=loyalty member)
@@ -157,6 +158,22 @@ dfLMModel <- data.frame(df$Satisfaction,df$Age,df$Price.Sensitivity,
                       df$Class.Eco,df$Class.EcoPlus,df$GenderBin)
 
 
+# # Factorizing Variables
+# df$Satisfaction <- as.integer(df$Satisfaction)
+# df$Price.Sensitivity <- ordered(df$Price.Sensitivity)
+# df$Gender <- as.factor(df$Gender)
+# df$Type.of.Travel <- as.factor(df$Type.of.Travel)
+# df$Airline.Status <- as.factor(df$Airline.Status)
+# df$Class <- as.factor(df$Class)
+# 
+# dfLMModel <- data.frame(df$Satisfaction,df$Age,df$No.of.Flights.p.a.,
+#                         df$Shopping.Amount.at.Airport,
+#                         df$Arrival.Delay.in.Minutes,
+#                         df$Flight.time.in.minutes,df$Flight.Distance,
+#                         df$Airline.Status, df$Type.of.Travel, df$Class,
+#                         df$Gender)
+
+
 # Remove NAs from linear model
 # We want data across these variables
 dfLMModel <- na.omit(dfLMModel)
@@ -164,6 +181,19 @@ str(dfLMModel)
 
 model.all<-lm(df.Satisfaction~.,data=dfLMModel)
 summary(model.all)
+
+nrow.df <- nrow(dfLMModel) # Total observations
+print(nrow.df)
+cutPoint <- floor(nrow.df/3*2) # 2/3 split
+rand <- sample(1:nrow.df) # randomize rows
+df.train <- dfLMModel[rand[1:cutPoint],] # Create train data set
+dim(df.train)
+df.test <- dfLMModel[rand[(cutPoint+1):nrow.df],] # Create test data set
+dim(df.test)
+
+# Create decision tree using train data 
+# tree <- rpart(df.Satisfaction~., data = df.train, cp=.02)
+# rpart.plot(tree, box.palette="RdBu", shadow.col="gray", nn=TRUE)
 
 # First model iteration
 # Remove loyalty cards (not significant)
@@ -213,6 +243,29 @@ rmse <- function(error)
   sqrt(mean(error^2))
 }
 
+# install.packages("rpart")
+# install.packages("rpart.plot")
+# library(rpart)
+# library(rpart.plot)
+
+# tree <- rpart(df.Satisfaction~., data = df.train, cp=.02)
+# rpart.plot(tree, box.palette="RdBu", shadow.col="gray", nn=TRUE)
+
+
+# # Checking for non-linearity within the data
+# resettest(df.Satisfaction~., power=2:3, type='regressor', data=df.train)
+# 
+# boxTidwell(df.Satisfaction~df.Flight.time.in.minutes, data=df.train, tol=0.001, max.iter=25)
+# 
+# df.new <- df.train
+# 
+# # Variable Transformations
+# df.new$df.Flight.time.in.minutes <- (df.train$df.Flight.time.in.minutes)^(-2)
+# 
+# # Check new model
+# lm.new <- lm(df.Satisfaction~., data=df.new)
+# summary(lm.new)
+
 # LM Model
 lm.model <- lm(df.Satisfaction~., data=df.train)
 summary(lm.model)
@@ -227,12 +280,6 @@ head(df.test)
 rmse(df.test$error1)
 # sqrt(mean((df.test$error1)^2))
 
-# Checking for non-linearity within the data
-resettest(df.Satisfaction~., power=2:3, type='regressor', data=df.train)
-
-summary(df.train$df.Age)
-
-boxTidwell(df.Satisfaction~df.Flight.time.in.minutes, data=df.train, tol=0.001, max.iter=25)
 
 # SVM
 svm.model<-svm(df.Satisfaction~.,data=df.train)
@@ -279,6 +326,11 @@ dim(df.train2)
 df.test2 <- iter.4[rand[(cutPoint+1):nrow.df],] # Create test data set 
 dim(df.test2)
 
+
+length(df.test$SatisfactionClass)
+
+
+
 # SVM
 svm.model.class <- svm(SatisfactionClass~., data = df.train2)
 # Export file for easier copy/paste
@@ -288,7 +340,7 @@ print(summary(svm.model.class))
 # Review predictions 
 df.test2$predictSatSVM <- predict(svm.model.class, df.test2)
 str(df.test2)
-results <- table(df.test$SatisfactionClass, df.test2$predictSatSVM)
+results <- table(df.test2$SatisfactionClass, df.test2$predictSatSVM)
 print(results)
 percentCorrect <- (results[1,1] + results[2,2] / results[1,1] + results[1,2] + 
                      results[2,1] + results[2,2]) * 100
@@ -488,3 +540,233 @@ g <- g + theme_classic() + theme(axis.line = element_blank(),
                                  legend.text = element_text(size=15),
                                  legend.position = "left")
 
+#Create satisfaction variable coded (4-5, 3, 1-2)
+df$Satisfaction.Coded <- ifelse(df$Satisfaction==5, "4-5", 
+                         ifelse(df$Satisfaction==4, "4-5", 
+                         ifelse(df$Satisfaction==3, "3", 
+                         ifelse(df$Satisfaction==2, 
+                         "1-2",ifelse(df$Satisfaction==1,
+                         "1-2", 'NA'))))) 
+
+#Satisfaction descriptives
+summary(df$Satisfaction)
+
+#Let's check sample sizes by airline
+stack(tapply(df$Unique, df$Airline.Name, length))
+
+
+#View mean satisfaction by airline
+
+round.mean <- function(x)
+{
+  y <- round(mean(x),digits=2)
+  return(y)
+}
+
+stack(tapply(df$Satisfaction, df$Airline.Name, round.mean))
+
+#-------Satisfaction by Airline Visualized as Counts-------
+g <- ggplot(df, aes(x=Airline.Name))
+g <- g + geom_histogram(stat="count", color="black", 
+                        aes(fill=Satisfaction.Coded))
+g <- g + theme(axis.text.x = element_text(angle = 90))
+g <- g + ggtitle("Satisfaction by Airline") + 
+  theme(plot.title=element_text(hjust=0.5))
+g <- g + xlab("Airline Name") + ylab("Count of Records") + 
+  labs(fill="Satisfaction Grouped")
+g <- g + scale_fill_manual(values = c("darkred", "gray", "dodgerblue4"))
+g
+
+#-------Satisfaction by Airline Visualized as Percentages-------
+g <- ggplot(df, aes(fill=factor(Satisfaction), y=Unique, x=Airline.Name))
+g <- g + geom_bar(position="fill", stat="identity") 
+g <- g + theme(axis.text.x = element_text(angle = 90))
+g <- g + ggtitle("Satisfaction by Airline") + 
+  theme(plot.title=element_text(hjust=0.5))
+g <- g + xlab("Airline Name") + ylab("") + labs(fill="Satisfaction")
+g <- g + scale_fill_manual(values = c("darkred", "indianred2", "gray", 
+                                      "dodgerblue1", "dodgerblue4"))
+g
+
+#-------Satisfaction by Airline Visualized as Y=Average-------
+TempDf <- data.frame(tapply(df$Satisfaction, df$Airline.Name, mean))
+TempDf$Airline.Name <- row.names(TempDf)
+names(TempDf)[1] <- "Value"
+g <- ggplot(TempDf, aes(x=reorder(Airline.Name, -Value), y=Value))
+g <- g + geom_bar(stat="identity", color="black",fill="dodgerblue4")
+g <- g + theme(axis.text.x = element_text(angle = 90, size=12))
+g <- g + ggtitle("Average Satisfaction by Airline Sorted") + 
+  theme(plot.title=element_text(hjust=0.5))
+g <- g + xlab("Airline Name") + ylab("Average Satisfaction")
+g <- g + coord_cartesian(ylim = c (1, 5))
+g <- g + geom_text(aes(label=round(Value,2)), 
+                   position=position_dodge(width=0.9), vjust=-0.25)
+g
+
+
+#-------Airline Average Arrival Delay Comparison-------
+g <- ggplot(df, aes(x=Airline.Name, y=Arrival.Delay.in.Minutes))
+g <- g + geom_bar(stat="summary", fun="mean", color="black", fill="dodgerblue4")
+g <- g + theme(axis.text.x = element_text(angle = 90))
+g <- g + xlab("Airline Name") + ylab("Arrival Delay (minutes)")
+g
+
+#-------Satisfaction by Loyalty Membership (Split Business vs. Personal) with y=Average-------
+g <- ggplot(df, aes(x=LoyaltyCardCat, y=Satisfaction, group=Type.of.Travel, 
+                    color=Type.of.Travel))
+g <- g + geom_line(stat="summary", fun="mean", size=1.5)
+g <- g + ggtitle("Average Satisfaction by Loyalty Membership & Travel Type") + 
+  theme(plot.title=element_text(hjust=0.5))
+g <- g + xlab("Loyalty Membership") + ylab("Average Satisfaction")
+g <- g + coord_cartesian(ylim = c (1, 5))
+g <- g + geom_point(stat="summary", fun="mean", size=3)
+g
+
+#-------Satisfaction by Age & Traveler Type-------
+g <- ggplot(df, aes(x=Age, y=Satisfaction, group=Type.of.Travel, 
+                    color=Type.of.Travel))
+g <- g + geom_point(stat="summary", fun="mean", size=1.75)
+g <- g + ggtitle("Average Satisfaction by Age & Travel Type") + 
+  theme(plot.title=element_text(hjust=0.5))
+g <- g + xlab("Age of Customer") + ylab("Average Satisfaction")
+g <- g + coord_cartesian(ylim = c (1, 5))
+g
+
+#-------Satisfaction by Airline Status & Traveler Type-------
+g <- ggplot(df, aes(x=factor(Airline.Status, level = c("Blue", "Silver", "Gold", 
+                                                       "Platinum")), 
+                    y=Satisfaction, group=Type.of.Travel, color=Type.of.Travel))
+g <- g + geom_line(stat="summary", fun="mean", size=1.5)
+g <- g + geom_point(stat="summary", fun="mean", size=3)
+g <- g + ggtitle("Average Satisfaction by Airline Status & Travel Type") + 
+  theme(plot.title=element_text(hjust=0.5))
+g <- g + xlab("Airline Status") + ylab("Average Satisfaction")
+g <- g + coord_cartesian(ylim = c (1, 5))
+g
+
+#-------Satisfaction by Gender & Traveler Type-------
+g <- ggplot(df, aes(x=Gender, y=Satisfaction, group=Type.of.Travel, 
+                    color=Type.of.Travel))
+g <- g + geom_line(stat="summary", fun="mean", size=1.5)
+g <- g + geom_point(stat="summary", fun="mean", size=3)
+g <- g + ggtitle("Average Satisfaction by Gender & Travel Type") + 
+  theme(plot.title=element_text(hjust=0.5))
+g <- g + xlab("Gender") + ylab("Average Satisfaction")
+g <- g + coord_cartesian(ylim = c (1, 5))
+g
+
+# Show the U.S. map, 
+# Thus code was modified from the Sample Project Report
+OriginState <- state.name 
+area <- state.area
+center <- state.center
+state_1 <- data.frame(OriginState, area, center)
+
+
+UniqueOS <- sort(table(df$Origin.State)) 
+UniqueOS <- data.frame(UniqueOS) 
+colnames(UniqueOS) <- c("OriginState","count") 
+
+Origin_State <- merge(UniqueOS, state_1, by = "OriginState") 
+Origin_State$OriginState <- tolower(Origin_State$OriginState) 
+
+library(ggplot2) 
+library(ggmap)
+us <- map_data("state")
+
+Origin_State_Area <- ggplot(Origin_State, aes(map_id = OriginState)) 
+Origin_State_Area <- Origin_State_Area + 
+  geom_map(map = us, aes(fill = Origin_State$area))
+Origin_State_Area <- Origin_State_Area + 
+  expand_limits(x = Origin_State$x, y = Origin_State$y)
+Origin_State_Area <- Origin_State_Area + coord_map() + ggtitle("Area") 
+
+OS <- ggplot(Origin_State, aes(map_id = OriginState))
+OS <- OS + geom_map(map = us, aes(fill = Origin_State$count)) 
+OS <- OS + expand_limits(x = Origin_State$x, y = Origin_State$y) 
+OS <- OS + coord_map() + ggtitle("Origin State")
+OS
+
+DestinationState <- state.name 
+area <- state.area
+center <- state.center
+state_2 <- data.frame(DestinationState, area, center)
+
+UniqueDS <- sort(table(df$Destination.State)) 
+UniqueDS <- data.frame(UniqueDS)
+colnames(UniqueDS) <- c("DestinationState","count")
+
+
+Destination_State <- merge(UniqueDS, state_2, by = "DestinationState") 
+Destination_State$DestinationState <- 
+  tolower(Destination_State$DestinationState) 
+
+Destination_State_Area <- ggplot(Destination_State, 
+                                 aes(map_id = DestinationState)) 
+Destination_State_Area <- Destination_State_Area + 
+  geom_map(map = us, aes(fill = Destination_State$area))
+Destination_State_Area <- Destination_State_Area + 
+  expand_limits(x = Destination_State$x, y = Destination_State$y)
+Destination_State_Area <- Destination_State_Area + coord_map() + ggtitle("Area")
+
+DS <- ggplot(Destination_State, aes(map_id = DestinationState))
+DS <- DS + geom_map(map = us, aes(fill = Destination_State$count))
+DS <- DS + expand_limits(x = Destination_State$x, y = Destination_State$y) 
+DS <- DS + coord_map() + ggtitle("Destination State")
+DS
+
+# Too much to geocode we plan to comment out
+# UniqueOC <- sort(table(df$Orgin.City)) 
+# UniqueOC <- data.frame(UniqueOC) 
+# colnames(UniqueOC) <- c("OriginCity","count") 
+# View(UniqueOC)
+
+# UniqueDC <- sort(table(df$Destination.City)) 
+# UniqueDC <- data.frame(UniqueDC) 
+# colnames(UniqueDC) <- c("DestinationCity","count") 
+# View(UniqueDC)
+
+# MS Additions....
+
+# Average Departure Delay by Origin State Data Frame
+dfNoNA <- na.omit(df) #Remove NAs from df
+TempDf <- data.frame(tapply(dfNoNA$Departure.Delay.in.Minutes, 
+                            dfNoNA$Origin.State, mean))
+TempDf$Origin.State <- row.names(TempDf)
+names(TempDf)[1] <- "Departure.Delay.in.Minutes"
+TempDf <- TempDf[-39,] #Remove Puerto Rico
+TempDf <- TempDf[-44,] #Remove U.S Pacific Trust Territories
+TempDf[order(-TempDf$Departure.Delay.in.Minutes),]
+# View(TempDf)
+Origin_State$Mean.Departure.Delay <- TempDf$Departure.Delay.in.Minutes
+# View(Origin.State)
+
+OS <- ggplot(Origin_State, aes(map_id = OriginState))
+OS <- OS + geom_map(map = us, aes(fill = Origin_State$count)) 
+OS <- OS + expand_limits(x = Origin_State$x, y = Origin_State$y) 
+OS <- OS + coord_map() + ggtitle("Origin State w/ Average Departure Delays")
+OS <- OS + geom_point(data=Origin_State, aes(x=Origin_State$x, y=Origin_State$y), 
+                      size=Origin_State$Mean.Departure.Delay, color="#800000b5")
+OS
+
+# Average Arrival Delay by Destination State Data Frame
+TempDf <- data.frame(tapply(dfNoNA$Arrival.Delay.in.Minutes, 
+                            dfNoNA$Destination.State, mean))
+TempDf$Destination.State <- row.names(TempDf)
+names(TempDf)[1] <- "Arrival.Delay.in.Minutes"
+TempDf <- TempDf[-39,] #Remove Puerto Rico
+TempDf <- TempDf[-44,] #Remove U.S Pacific Trus Territories
+TempDf[order(-TempDf$Arrival.Delay.in.Minutes),]
+# View(TempDf)
+Destination_State$Mean.Arrival.Delay <- TempDf$Arrival.Delay.in.Minutes
+# View(Destination_State)
+
+DS <- ggplot(Destination_State, aes(map_id = DestinationState))
+DS <- DS + geom_map(map = us, aes(fill = Destination_State$count))
+DS <- DS + expand_limits(x = Destination_State$x, y = Destination_State$y) 
+DS <- DS + coord_map() + ggtitle("Destination State w/ Average Arrival Delays")
+DS <- DS + geom_point(data=Destination_State, aes(x=Destination_State$x, 
+                                                  y=Destination_State$y), 
+                      size=Destination_State$Mean.Arrival.Delay, 
+                      color="#800000b5")
+DS
